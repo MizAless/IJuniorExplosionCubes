@@ -19,7 +19,12 @@ public class ExplosionCube : MonoBehaviour
 
     private void OnMouseDown()
     {
-        float splitRoll = Random.value;
+        Destroy();
+    }
+
+    private void Destroy()
+    {
+        float splitRoll = UnityEngine.Random.value;
 
         if (splitRoll <= _splitChanse)
             Explode();
@@ -38,7 +43,7 @@ public class ExplosionCube : MonoBehaviour
 
     private void Explode()
     {
-        int spawnedCubesCount = Random.Range(_minSpawnedCubesCount, _maxSpawnedCubesCount + 1);
+        int spawnedCubesCount = UnityEngine.Random.Range(_minSpawnedCubesCount, _maxSpawnedCubesCount + 1);
 
         for (int i = 0; i < spawnedCubesCount; i++)
         {
@@ -49,20 +54,26 @@ public class ExplosionCube : MonoBehaviour
     private void Spawn()
     {
         Vector3 newExplosionCubeLocalScale = transform.localScale / _scaleRedutionCoefficient;
+        float newSplitChanse = _splitChanse / _splitChanseRedutionCoefficient;
 
+        Init(newExplosionCubeLocalScale, newSplitChanse);
+    }
+
+    private void Init(Vector3 localScale, float splitChanse)
+    {
         ExplosionCube newExplosionCube = Instantiate(_explosionCubePrefab);
 
         newExplosionCube.GetComponent<Rigidbody>().AddExplosionForce(_explosionForce, transform.position, _explosionRadius);
-        newExplosionCube.transform.localScale = newExplosionCubeLocalScale;
-        newExplosionCube._splitChanse /= _splitChanseRedutionCoefficient;
+        newExplosionCube.transform.localScale = localScale;
+        newExplosionCube._splitChanse = splitChanse;
         newExplosionCube.SetRandomColor();
     }
 
     private void SetRandomColor()
     {
-        float randomRedValue = Random.value;
-        float randomGreenValue = Random.value;
-        float randomBlueValue = Random.value;
+        float randomRedValue = UnityEngine.Random.value;
+        float randomGreenValue = UnityEngine.Random.value;
+        float randomBlueValue = UnityEngine.Random.value;
         float alphaValue = 1f;
 
         Color newColor = new Color(randomRedValue, randomGreenValue, randomBlueValue, alphaValue);
