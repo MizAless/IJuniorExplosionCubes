@@ -1,40 +1,27 @@
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 
 [RequireComponent(typeof(Rigidbody))]  
 [RequireComponent(typeof(Renderer))]  
-[RequireComponent(typeof(Exploder))]  
-[RequireComponent(typeof(Spawner))]  
+
 public class ExplosionCube : MonoBehaviour
 {
-    private Exploder _exploder;
-    private Spawner _spawner;
+    [SerializeField] private float _splitChance = 1f;
+
     private Renderer _renderer;
     private Rigidbody _rigidbody;
 
-    private void Start()
+    public float SplitChanse => _splitChance;
+
+    public event Action<ExplosionCube> Destroyed;
+
+    private void Awake()
     {
-        InitComponents();
-
-        SetRandomColor();
-    }
-
-    public Rigidbody GetRigidbody() => _rigidbody;
-
-    public void Init(Vector3 localScale, float splitChanse)
-    {
-        InitComponents();
-        transform.localScale = localScale;
-        _spawner.Init(splitChanse);
-        SetRandomColor();
-    }
-
-    private void InitComponents()
-    {
-        _exploder = GetComponent<Exploder>();
-        _spawner = GetComponent<Spawner>();
         _renderer = GetComponent<Renderer>();
         _rigidbody = GetComponent<Rigidbody>();
+
+        SetRandomColor();
     }
 
     private void OnMouseDown()
@@ -42,10 +29,23 @@ public class ExplosionCube : MonoBehaviour
         Destroy();
     }
 
+    public Rigidbody GetRigidbody() => _rigidbody;
+
+    public void Init(Vector3 localScale, float splitChanse)
+    {
+        transform.localScale = localScale;
+        _splitChance = splitChanse;
+        SetRandomColor();
+    }
+
     private void Destroy()
     {
-        if (_spawner.TrySpawn(out List<ExplosionCube> explosionCubes))
-            _exploder.Explode(explosionCubes);
+        float splitRoll = UnityEngine.Random.value;
+
+        if (splitRoll <= _splitChance)
+        {
+            Destroyed?.Invoke(this);
+        }
 
         Destroy(gameObject);
     }

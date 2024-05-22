@@ -1,32 +1,26 @@
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 
 public class Spawner : MonoBehaviour
 {
     [SerializeField] private float _scaleRedutionCoefficient;
-    [SerializeField] private float _splitChanse = 1f;
-    [SerializeField] private float _splitChanseRedutionCoefficient = 2f;
+    [SerializeField] private float _splitChanceRedutionCoefficient = 2f;
     [SerializeField] private int _minSpawnedCubesCount;
     [SerializeField] private int _maxSpawnedCubesCount;
     [SerializeField] private ExplosionCube _explosionCubePrefab;
+    [SerializeField] private List<ExplosionCube> _explosionCubeList;
 
-    public bool TrySpawn(out List<ExplosionCube> explosionCubes)
+    [SerializeField] private Exploder _exploder;
+
+    public event Action<Vector3, List<ExplosionCube>> Spawned;
+
+    private void Awake()
     {
-        float splitRoll = UnityEngine.Random.value;
-
-        if (splitRoll <= _splitChanse)
+        foreach (ExplosionCube explosionCube in _explosionCubeList)
         {
-            explosionCubes = Spawn();
-            return true;
+            explosionCube.Destroyed += Spawn;
         }
-
-        explosionCubes = null;
-        return false;
-    }
-
-    public void Init(float splitChanse)
-    {
-        _splitChanse = splitChanse;
     }
 
     private void OnValidate()
@@ -38,7 +32,7 @@ public class Spawner : MonoBehaviour
             _maxSpawnedCubesCount = _minSpawnedCubesCount + 1;
     }
 
-    private List<ExplosionCube> Spawn()
+    public void Spawn(ExplosionCube explosionCube)
     {
         int spawnedCubesCount = UnityEngine.Random.Range(_minSpawnedCubesCount, _maxSpawnedCubesCount + 1);
 
@@ -46,14 +40,15 @@ public class Spawner : MonoBehaviour
 
         for (int i = 0; i < spawnedCubesCount; i++)
         {
-            Vector3 newExplosionCubeLocalScale = transform.localScale / _scaleRedutionCoefficient;
-            float newSplitChanse = _splitChanse / _splitChanseRedutionCoefficient;
+            Vector3 newExplosionCubeLocalScale = explosionCube.transform.localScale / _scaleRedutionCoefficient;
+            float newSplitChance = explosionCube.SplitChanse / _splitChanceRedutionCoefficient;
 
-            ExplosionCube newExplosionCube = Instantiate(_explosionCubePrefab);
-            newExplosionCube.Init(newExplosionCubeLocalScale, newSplitChanse);
+            ExplosionCube newExplosionCube = Instantiate(_explosionCubePrefab, explosionCube.transform.position, Quaternion.identity);
+            newExplosionCube.Init(newExplosionCubeLocalScale, newSplitChance);
+            newExplosionCube.Destroyed += Spawn;
             explosionCubes.Add(newExplosionCube);
         }
 
-        return explosionCubes;
-    }   
+        _exploder.Explode(explosionCube.transform.position, explosionCubes);
+    }
 }
