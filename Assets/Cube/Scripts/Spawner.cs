@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -9,15 +8,12 @@ public class Spawner : MonoBehaviour
     [SerializeField] private int _minSpawnedCubesCount;
     [SerializeField] private int _maxSpawnedCubesCount;
     [SerializeField] private ExplosionCube _explosionCubePrefab;
-    [SerializeField] private List<ExplosionCube> _explosionCubeList;
-
+    [SerializeField] private List<ExplosionCube> _explosionCubesList;
     [SerializeField] private Exploder _exploder;
-
-    public event Action<Vector3, List<ExplosionCube>> Spawned;
 
     private void Awake()
     {
-        foreach (ExplosionCube explosionCube in _explosionCubeList)
+        foreach (ExplosionCube explosionCube in _explosionCubesList)
         {
             explosionCube.Destroyed += Spawn;
         }
@@ -46,6 +42,7 @@ public class Spawner : MonoBehaviour
             ExplosionCube newExplosionCube = Instantiate(_explosionCubePrefab, explosionCube.transform.position, Quaternion.identity);
             newExplosionCube.Init(newExplosionCubeLocalScale, newSplitChance);
             newExplosionCube.Destroyed += Spawn;
+
             explosionCubes.Add(newExplosionCube);
         }
 
