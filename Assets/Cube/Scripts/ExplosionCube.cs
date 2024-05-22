@@ -1,20 +1,40 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 [RequireComponent(typeof(Rigidbody))]  
+[RequireComponent(typeof(Renderer))]  
+[RequireComponent(typeof(Exploder))]  
+[RequireComponent(typeof(Spawner))]  
 public class ExplosionCube : MonoBehaviour
 {
-    [SerializeField] private float _explosionRadius;
-    [SerializeField] private float _explosionForce;
-    [SerializeField] private float _scaleRedutionCoefficient;
-    [SerializeField] private float _splitChanse = 1f;
-    [SerializeField] private float _splitChanseRedutionCoefficient = 2f;
-    [SerializeField] private int _minSpawnedCubesCount;
-    [SerializeField] private int _maxSpawnedCubesCount;
-    [SerializeField] private ExplosionCube _explosionCubePrefab;
+    private Exploder _exploder;
+    private Spawner _spawner;
+    private Renderer _renderer;
+    private Rigidbody _rigidbody;
 
     private void Start()
     {
+        InitComponents();
+
         SetRandomColor();
+    }
+
+    public Rigidbody GetRigidbody() => _rigidbody;
+
+    public void Init(Vector3 localScale, float splitChanse)
+    {
+        InitComponents();
+        transform.localScale = localScale;
+        _spawner.Init(splitChanse);
+        SetRandomColor();
+    }
+
+    private void InitComponents()
+    {
+        _exploder = GetComponent<Exploder>();
+        _spawner = GetComponent<Spawner>();
+        _renderer = GetComponent<Renderer>();
+        _rigidbody = GetComponent<Rigidbody>();
     }
 
     private void OnMouseDown()
@@ -24,49 +44,10 @@ public class ExplosionCube : MonoBehaviour
 
     private void Destroy()
     {
-        float splitRoll = UnityEngine.Random.value;
-
-        if (splitRoll <= _splitChanse)
-            Explode();
+        if (_spawner.TrySpawn(out List<ExplosionCube> explosionCubes))
+            _exploder.Explode(explosionCubes);
 
         Destroy(gameObject);
-    }
-
-    private void OnValidate()
-    {
-        if (_minSpawnedCubesCount < 0)
-            _minSpawnedCubesCount = 0;
-
-        if (_maxSpawnedCubesCount < _minSpawnedCubesCount)
-            _maxSpawnedCubesCount = _minSpawnedCubesCount + 1;
-    }
-
-    private void Explode()
-    {
-        int spawnedCubesCount = UnityEngine.Random.Range(_minSpawnedCubesCount, _maxSpawnedCubesCount + 1);
-
-        for (int i = 0; i < spawnedCubesCount; i++)
-        {
-            Spawn();
-        }
-    }
-
-    private void Spawn()
-    {
-        Vector3 newExplosionCubeLocalScale = transform.localScale / _scaleRedutionCoefficient;
-        float newSplitChanse = _splitChanse / _splitChanseRedutionCoefficient;
-
-        Init(newExplosionCubeLocalScale, newSplitChanse);
-    }
-
-    private void Init(Vector3 localScale, float splitChanse)
-    {
-        ExplosionCube newExplosionCube = Instantiate(_explosionCubePrefab);
-
-        newExplosionCube.GetComponent<Rigidbody>().AddExplosionForce(_explosionForce, transform.position, _explosionRadius);
-        newExplosionCube.transform.localScale = localScale;
-        newExplosionCube._splitChanse = splitChanse;
-        newExplosionCube.SetRandomColor();
     }
 
     private void SetRandomColor()
@@ -78,6 +59,8 @@ public class ExplosionCube : MonoBehaviour
 
         Color newColor = new Color(randomRedValue, randomGreenValue, randomBlueValue, alphaValue);
 
-        GetComponent<Renderer>().material.SetColor("_Color", newColor);
+        string propertyName = "_Color";
+
+        _renderer.material.SetColor(propertyName, newColor);
     }
 }
