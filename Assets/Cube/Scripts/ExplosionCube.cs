@@ -3,6 +3,7 @@ using UnityEngine;
 
 [RequireComponent(typeof(Rigidbody))]  
 [RequireComponent(typeof(Renderer))]  
+[RequireComponent(typeof(Exploder))]  
 
 public class ExplosionCube : MonoBehaviour
 {
@@ -10,15 +11,17 @@ public class ExplosionCube : MonoBehaviour
 
     private Renderer _renderer;
     private Rigidbody _rigidbody;
+    private Exploder _exploder;
 
     public float SplitChanse => _splitChance;
 
-    public event Action<ExplosionCube> Destroyed;
+    public event Action<ExplosionCube> SplitChanceWorked;
 
     private void Awake()
     {
         _renderer = GetComponent<Renderer>();
         _rigidbody = GetComponent<Rigidbody>();
+        _exploder = GetComponent<Exploder>();
 
         SetRandomColor();
     }
@@ -30,10 +33,13 @@ public class ExplosionCube : MonoBehaviour
 
     public Rigidbody GetRigidbody() => _rigidbody;
 
-    public void Init(Vector3 localScale, float splitChanse)
+    public Exploder GetExploder() => _exploder;
+
+    public void Init(Vector3 localScale, float splitChanse, float explosionRadius, float explosionForce)
     {
         transform.localScale = localScale;
         _splitChance = splitChanse;
+        _exploder.Init(explosionRadius, explosionForce);
         SetRandomColor();
     }
 
@@ -43,7 +49,11 @@ public class ExplosionCube : MonoBehaviour
 
         if (splitRoll <= _splitChance)
         {
-            Destroyed?.Invoke(this);
+            SplitChanceWorked?.Invoke(this);
+        }
+        else
+        {
+            _exploder.Explode(transform.position);
         }
 
         Destroy(gameObject);

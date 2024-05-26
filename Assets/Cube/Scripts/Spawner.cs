@@ -3,19 +3,22 @@ using UnityEngine;
 
 public class Spawner : MonoBehaviour
 {
-    [SerializeField] private float _scaleRedutionCoefficient;
+    [SerializeField] private float _scaleRedutionCoefficient = 2f;
     [SerializeField] private float _splitChanceRedutionCoefficient = 2f;
+    [SerializeField] private float _explosionRadiusIncreaseCoefficient = 2f;
+    [SerializeField] private float _explosionForceIncreaseCoefficient = 2f;
+
     [SerializeField] private int _minSpawnedCubesCount;
     [SerializeField] private int _maxSpawnedCubesCount;
+
     [SerializeField] private ExplosionCube _explosionCubePrefab;
     [SerializeField] private List<ExplosionCube> _explosionCubesList;
-    [SerializeField] private Exploder _exploder;
 
     private void Awake()
     {
         foreach (ExplosionCube explosionCube in _explosionCubesList)
         {
-            explosionCube.Destroyed += Spawn;
+            explosionCube.SplitChanceWorked += Spawn;
         }
     }
 
@@ -38,14 +41,14 @@ public class Spawner : MonoBehaviour
         {
             Vector3 newExplosionCubeLocalScale = explosionCube.transform.localScale / _scaleRedutionCoefficient;
             float newSplitChance = explosionCube.SplitChanse / _splitChanceRedutionCoefficient;
+            float newExplosionRadius = explosionCube.GetExploder().ExplosionRadius * _explosionRadiusIncreaseCoefficient;
+            float newExplosionForce = explosionCube.GetExploder().ExplosionForce * _explosionForceIncreaseCoefficient;
 
             ExplosionCube newExplosionCube = Instantiate(_explosionCubePrefab, explosionCube.transform.position, Quaternion.identity);
-            newExplosionCube.Init(newExplosionCubeLocalScale, newSplitChance);
-            newExplosionCube.Destroyed += Spawn;
+            newExplosionCube.Init(newExplosionCubeLocalScale, newSplitChance, newExplosionRadius, newExplosionForce);
+            newExplosionCube.SplitChanceWorked += Spawn;
 
             explosionCubes.Add(newExplosionCube);
         }
-
-        _exploder.Explode(explosionCube.transform.position, explosionCubes);
     }
 }
